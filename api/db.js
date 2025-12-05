@@ -3,7 +3,7 @@ const { Client } = require('pg');
 
 // 注意：在 Vercel 中，連接資訊應該從環境變數 (process.env) 獲取，而不是硬編碼！
 // 這裡僅用於示範結構。
-const connectionString = process.env.DATABASE_URL || 'your_supabase_connection_string'; 
+const connectionString = process.env.DATABASE_URL; 
 
 // 獲取今天的日期 (YYYY-MM-DD)
 exports.getTodayDate = () => {

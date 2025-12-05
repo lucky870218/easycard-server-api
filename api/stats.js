@@ -4,7 +4,7 @@ const { getClient, getTodayDate } = require('./db');
 // Vercel Serverless Function 導出
 module.exports = async (req, res) => {
     // 簡單 Admin Key 驗證 (請在 Vercel 環境變數中設定 ADMIN_KEY)
-    const ADMIN_KEY = process.env.ADMIN_KEY || 'pgyhotgirl';
+    const ADMIN_KEY = process.env.ADMIN_KEY;
     const providedKey = req.query.key; 
 
     if (providedKey !== ADMIN_KEY) {
