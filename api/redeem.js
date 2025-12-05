@@ -19,16 +19,16 @@ module.exports = async (req, res) => {
         // 使用 SQL 事務和 RETURNING 來確保原子性、並發安全和一次性操作
         const redeemQuery = `
             WITH upsert AS (
-                INSERT INTO coupons (date, count, daily_limit)
+                INSERT INTO easycards (date, count, daily_limit)
                 VALUES ($1, 1, 100) 
                 ON CONFLICT (date) DO UPDATE 
-                SET count = coupons.count + 1 
-                WHERE coupons.count < 100 
+                SET count = easycards.count + 1 
+                WHERE easycards.count < 100 
                 RETURNING count, daily_limit
             )
             SELECT * FROM upsert
             UNION ALL
-            SELECT count, daily_limit FROM coupons WHERE date = $1 AND count = 100;
+            SELECT count, daily_limit FROM easycards WHERE date = $1 AND count = 100;
         `;
 
         const result = await client.query(redeemQuery, [today]);
@@ -43,7 +43,7 @@ module.exports = async (req, res) => {
         const dailyLimit = result.rows[0].daily_limit;
         
         // (可選) 重新查詢總數給前端參考
-        const totalRes = await client.query('SELECT SUM(count) AS totalCount FROM coupons');
+        const totalRes = await client.query('SELECT SUM(count) AS totalCount FROM easycards');
         const totalCount = totalRes.rows[0].totalcount || 0;
 
 

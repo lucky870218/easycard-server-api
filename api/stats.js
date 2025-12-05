@@ -19,11 +19,11 @@ module.exports = async (req, res) => {
         // 查詢今日數量 (如果今天沒有紀錄，用 COALESCE 返回 0)
         const todayRes = await client.query(`
             SELECT COALESCE(count, 0) AS dailyCount, daily_limit 
-            FROM coupons 
+            FROM easycards 
             WHERE date = $1
             UNION ALL 
             SELECT 0, 100 
-            WHERE NOT EXISTS (SELECT 1 FROM coupons WHERE date = $1)
+            WHERE NOT EXISTS (SELECT 1 FROM easycards WHERE date = $1)
             LIMIT 1;
         `, [today]);
         
@@ -31,7 +31,7 @@ module.exports = async (req, res) => {
         const dailyLimit = todayRes.rows[0].daily_limit;
 
         // 查詢總數量
-        const totalRes = await client.query('SELECT SUM(count) AS totalCount FROM coupons');
+        const totalRes = await client.query('SELECT SUM(count) AS totalCount FROM easycards');
         const totalCount = totalRes.rows[0].totalcount || 0;
 
         res.status(200).json({
