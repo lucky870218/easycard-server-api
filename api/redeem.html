@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>世界唐氏症日 悠遊卡兌換</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    /* ... (Style 樣式碼保持不變) ... */
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
+      padding: 24px;
+      max-width: 480px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .card {
+      border: 1px solid #eee;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+    }
+    p {
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+    button {
+      margin-top: 16px;
+      padding: 12px 24px;
+      font-size: 1rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+    }
+    button.primary {
+      background: #007bff;
+      color: white;
+    }
+    button.primary:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-top: 12px;
+      font-weight: bold;
+    }
+    .status-ok { color: #28a745; }
+    .status-used { color: #dc3545; }
+    .hint {
+      font-size: 0.8rem;
+      color: #888;
+      margin-top: 8px;
+    }
+    .backend-status {
+        margin-top: 10px;
+        font-size: 0.85rem;
+        color: #007bff;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>世界唐氏症日 悠遊卡兌換</h1>
+    <p>感謝你來到世界唐氏症日台北車站活動 💛<br>
+       **每日限量 100 張**。</p>
+
+    <button id="redeemBtn" class="primary">領取悠遊卡（點擊兌換）</button>
+
+    <div id="backendStatus" class="backend-status"></div>
+    <div id="status" class="status"></div>
+  </div>
+
+  <script>
+    const btn = document.getElementById('redeemBtn');
+    const statusEl = document.getElementById('status');
+    const backendStatusEl = document.getElementById('backendStatus');
+
+    // 📢 【修改點】替換成您的 Vercel 網域
+    const BACKEND_URL = 'https://easycard-server-api.vercel.app/'; 
+    
+    // 仍然需要這個 Key，用於「限制單一手機」在一天內只能按一次兌換按鈕
+    const localDailyClaimKey = 'dsf_local_daily_timestamp'; 
+
+    // 取得今天的日期 (YYYY-MM-DD)，用於 Local Storage 檢查
+    function getTodayDateString() {
+        return new Date().toISOString().split('T')[0];
+    }
+    
+    // --- 檢查和更新 UI 函式 ---
+
+    // 1. 從後端獲取統計數據 (用於檢查是否已達總數)
+    async function fetchStatsForCheck() {
+        try {
+            // 注意：兌換頁面不需要 ADMIN_KEY，這裡只是為了簡單檢查狀態
+            const response = await fetch(`${BACKEND_URL}/api/stats?key=CHECK`); // 使用一個無意義的 key 進行簡單檢查
+            if (!response.ok) return null;
+            return await response.json();
+        } catch (error) {
+            return null;
+        }
+    }
+
+    // 2. 檢查本機狀態 (確保單一使用者不過度點擊)
+    function checkLocalRedeemed() {
+        const todayDate = getTodayDateString();
+        const lastClaimDate = localStorage.getItem(localDailyClaimKey);
+        return lastClaimDate === todayDate; 
+    }
+
+    // 3. 根據狀態更新 UI
+    async function updateUI() {
+        backendStatusEl.textContent = '正在檢查狀態...';
+        btn.disabled = true; // 預設禁用
+
+        const stats = await fetchStatsForCheck();
+        const isLocalRedeemed = checkLocalRedeemed();
+        
+        if (!stats) {
+             backendStatusEl.textContent = '連線伺服器失敗，無法兌換。';
+             statusEl.textContent = '兌換服務暫時不可用。';
+             statusEl.className = 'status status-used';
+             return;
+        }
+        
+        backendStatusEl.textContent = `今日已發 ${stats.dailyCount} / ${stats.dailyLimit} 張`;
+
+        if (stats.dailyCount >= stats.dailyLimit) {
+            // 伺服器：今日限量已達
+            statusEl.textContent = '系統顯示：今日份的悠遊卡已全數發放完畢。';
+            statusEl.className = 'status status-used';
+        } else if (isLocalRedeemed) {
+            // 本機：今日已兌換過
+            btn.textContent = '本日已兌換完成 (請勿重複點擊)';
+            statusEl.textContent = `系統顯示：本手機今日已成功兌換。`;
+            statusEl.className = 'status status-used';
+        } else {
+            // 允許兌換
+            btn.disabled = false;
+            btn.textContent = '領取悠遊卡（點擊兌換）';
+            statusEl.textContent = '尚未兌換，請領到悠遊卡後再按「兌換」。';
+            statusEl.className = 'status status-ok';
+        }
+    }
+
+    // --- 兌換事件 ---
+    
+    btn.addEventListener('click', async function() {
+        if (!confirm('請確認你已在現場拿到悠遊卡，再按下「確定」執行兌換動作。')) {
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = '兌換中...';
+        statusEl.textContent = '正在與伺服器確認兌換資格...';
+
+        try {
+            // 📢 【修改點】呼叫新的 /api/redeem 端點
+            const response = await fetch(`${BACKEND_URL}/api/redeem`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                // 兌換成功
+                statusEl.textContent = `兌換成功！感謝您的參與！ (本日第 ${result.dailyCount} 張)`;
+                statusEl.className = 'status status-ok';
+
+                // 寫入 Local Storage，防止用戶再次點擊
+                localStorage.setItem(localDailyClaimKey, getTodayDateString());
+            } else {
+                // 兌換失敗 (例如：超過每日限量)
+                statusEl.textContent = `兌換失敗：${result.message || '未知錯誤'}`;
+                statusEl.className = 'status status-used';
+            }
+        } catch (error) {
+            statusEl.textContent = '兌換失敗：無法連線到伺服器。';
+            statusEl.className = 'status status-used';
+        } finally {
+            updateUI(); 
+        }
+    });
+
+    updateUI();
+  </script>
+</body>
+</html>

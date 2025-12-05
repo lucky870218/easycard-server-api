@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>管理員統計數據</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* ... (Style 樣式碼保持不變，或使用您的樣式) ... */
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
+            padding: 24px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .container {
+            border: 1px solid #ddd;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        h1 { color: #007bff; margin-bottom: 20px; }
+        .stats-item {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-left: 5px solid #007bff;
+            background-color: #f8f9fa;
+        }
+        .stats-value {
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: #28a745;
+            display: block;
+            margin-top: 5px;
+        }
+        #authSection {
+            padding: 20px;
+            border: 1px dashed #ccc;
+            border-radius: 8px;
+        }
+        input[type="password"] {
+            padding: 10px;
+            width: 80%;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 活動數據管理儀表板</h1>
+
+        <div id="authSection">
+            <h2>請輸入管理密鑰</h2>
+            <input type="password" id="adminKeyInput" placeholder="輸入密鑰...">
+            <button onclick="loadStats()">確認</button>
+            <p id="authMessage" style="color: red; margin-top: 10px;"></p>
+        </div>
+
+        <div id="statsDisplay" style="display: none;">
+            <p style="color: #6c757d;">伺服器時間：<span id="serverDate"></span></p>
+            
+            <div class="stats-item">
+                當日發放數量 (<span id="dailyLimit"></span>)
+                <span id="dailyCount" class="stats-value">--</span>
+            </div>
+            
+            <div class="stats-item">
+                活動總發放數量
+                <span id="totalCount" class="stats-value">--</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 📢 【修改點】替換成您的 Vercel 網域
+        const BACKEND_URL = 'https://easycard-server-api.vercel.app/'; 
+        // 📢 【重要】這裡的密鑰必須與 Vercel 環境變數中的 ADMIN_KEY 保持一致！
+        const ADMIN_KEY = 'YOUR_SECRET_ADMIN_KEY_12345'; 
+
+        const adminKeyInput = document.getElementById('adminKeyInput');
+        const authSection = document.getElementById('authSection');
+        const statsDisplay = document.getElementById('statsDisplay');
+        const authMessage = document.getElementById('authMessage');
+
+        const dailyCountEl = document.getElementById('dailyCount');
+        const totalCountEl = document.getElementById('totalCount');
+        const dailyLimitEl = document.getElementById('dailyLimit');
+        const serverDateEl = document.getElementById('serverDate');
+
+        async function loadStats() {
+            const providedKey = adminKeyInput.value.trim();
+            
+            if (providedKey !== ADMIN_KEY) {
+                authMessage.textContent = '密鑰錯誤，請重新輸入。';
+                return;
+            }
+            
+            authMessage.textContent = '正在載入數據...';
+            
+            try {
+                // 📢 【修改點】呼叫新的 /api/stats 端點，並帶上密鑰參數
+                const response = await fetch(`${BACKEND_URL}/api/stats?key=${providedKey}`);
+                const data = await response.json();
+
+                if (response.status === 401) {
+                    throw new Error(data.message || '驗證失敗');
+                }
+                
+                if (!response.ok) {
+                    throw new Error('伺服器錯誤: ' + (data.message || '未知錯誤'));
+                }
+
+                // 成功取得數據，更新顯示
+                dailyCountEl.textContent = data.dailyCount;
+                totalCountEl.textContent = data.totalCount;
+                dailyLimitEl.textContent = `上限 ${data.dailyLimit} 張`;
+                serverDateEl.textContent = data.today;
+
+                // 隱藏驗證區塊，顯示數據區塊
+                authSection.style.display = 'none';
+                statsDisplay.style.display = 'block';
+
+            } catch (error) {
+                authMessage.textContent = `載入失敗：${error.message}，請檢查 Vercel 伺服器和密鑰。`;
+            }
+        }
+    </script>
+</body>
+</html>
