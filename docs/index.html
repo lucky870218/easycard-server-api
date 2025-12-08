@@ -140,7 +140,14 @@
         } else if (isLocalRedeemed) {
             // 本機：今日已兌換過
             btn.textContent = '本日已兌換完成 (請勿重複點擊)';
-            statusEl.textContent = `系統顯示：本手機已成功兌換。`;
+            const redeemedTime = localStorage.getItem(localRedeemedTimeKey);
+
+            statusEl.innerHTML = `
+                  ✅ 本手機已成功兌換<br>
+                  🕒 領取時間：${redeemedTime || '時間未記錄'}
+                `;
+
+            //statusEl.textContent = `系統顯示：本手機已成功兌換。`;
             statusEl.className = 'status status-used';
         } else {
             // 允許兌換
@@ -182,7 +189,10 @@
                 // 寫入 Local Storage，防止用戶再次點擊
                 localStorage.setItem(localDailyClaimKey, getTodayDateString());
                 // 📢 【修改點】儲存兌換時間戳記
-                localStorage.setItem(localRedeemedTimeKey, timeString);
+                const redeemedTime = new Date().toLocaleString('zh-TW', {
+                  hour12: false
+                });
+                localStorage.setItem(localRedeemedTimeKey, redeemedTime);
             } else {
                 // 兌換失敗 (例如：超過每日限量)
                 statusEl.textContent = `兌換失敗：${result.message || '未知錯誤'}`;
