@@ -65,9 +65,11 @@
   <div class="card">
     <h1>世界唐氏症日 悠遊卡兌換</h1>
     <p>感謝你來到世界唐氏症日台北車站活動 💛<br>
-       **每日限量 100 張**。</p>
+       **每位參加者限領一次悠遊卡**。</p>
 
     <button id="redeemBtn" class="primary">領取悠遊卡（點擊兌換）</button>
+
+    <button id="clearBtn" class="secondary" style="margin-top: 10px; padding: 8px 16px;">清除兌換紀錄（測試重置）</button>
 
     <div id="backendStatus" class="backend-status"></div>
     <div id="status" class="status"></div>
@@ -75,6 +77,7 @@
 
   <script>
     const btn = document.getElementById('redeemBtn');
+    const clearBtn = document.getElementById('clearBtn'); // 取得清除按鈕
     const statusEl = document.getElementById('status');
     const backendStatusEl = document.getElementById('backendStatus');
 
@@ -134,7 +137,7 @@
         } else if (isLocalRedeemed) {
             // 本機：今日已兌換過
             btn.textContent = '本日已兌換完成 (請勿重複點擊)';
-            statusEl.textContent = `系統顯示：本手機今日已成功兌換。`;
+            statusEl.textContent = `系統顯示：本手機已成功兌換。`;
             statusEl.className = 'status status-used';
         } else {
             // 允許兌換
@@ -166,6 +169,7 @@
             });
 
             const result = await response.json();
+            const now = new Date(); // 取得當前時間
 
             if (response.ok && result.success) {
                 // 兌換成功
@@ -174,6 +178,8 @@
 
                 // 寫入 Local Storage，防止用戶再次點擊
                 localStorage.setItem(localDailyClaimKey, getTodayDateString());
+                // 📢 【修改點】儲存兌換時間戳記
+                localStorage.setItem(localRedeemedTimeKey, timeString);
             } else {
                 // 兌換失敗 (例如：超過每日限量)
                 statusEl.textContent = `兌換失敗：${result.message || '未知錯誤'}`;
@@ -185,6 +191,16 @@
         } finally {
             updateUI(); 
         }
+    });
+
+    // 📢 【修改點】新增清除按鈕的事件監聽器
+    clearBtn.addEventListener('click', function() {
+    if (confirm('確定要清除本機兌換紀錄嗎？這只影響本手機的測試狀態。')) {
+      localStorage.removeItem(localDailyClaimKey);
+      localStorage.removeItem(localRedeemedTimeKey); // 清除時間戳記
+      alert('本機兌換紀錄已清除！');
+      updateUI(); // 更新介面
+    }
     });
 
     updateUI();
