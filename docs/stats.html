@@ -84,8 +84,6 @@
     <script>
         // 📢 【修改點】替換成您的 Vercel 網域
         const BACKEND_URL = 'https://easycard-server-api.vercel.app'; 
-        // 📢 【重要】這裡的密鑰必須與 Vercel 環境變數中的 ADMIN_KEY 保持一致！
-        const ADMIN_KEY = 'YOUR_SECRET_ADMIN_KEY_12345'; 
 
         const adminKeyInput = document.getElementById('adminKeyInput');
         const authSection = document.getElementById('authSection');
@@ -99,41 +97,31 @@
 
         async function loadStats() {
             const providedKey = adminKeyInput.value.trim();
-            
-            if (providedKey !== ADMIN_KEY) {
-                authMessage.textContent = '密鑰錯誤，請重新輸入。';
-                return;
-            }
-            
             authMessage.textContent = '正在載入數據...';
-            
+
             try {
-                // 📢 【修改點】呼叫新的 /api/admin_stats 端點，並帶上密鑰參數
-                const response = await fetch(`${BACKEND_URL}/api/admin_stats?key=${providedKey}`);
+                const response = await fetch(`${BACKEND_URL}/api/stats?key=${providedKey}`);
                 const data = await response.json();
 
-                if (response.status === 401) {
+                if (!response.ok) {
                     throw new Error(data.message || '驗證失敗');
                 }
-                
-                if (!response.ok) {
-                    throw new Error('伺服器錯誤: ' + (data.message || '未知錯誤'));
-                }
 
-                // 成功取得數據，更新顯示
+                // ✅ 成功取得數據，更新顯示
                 dailyCountEl.textContent = data.dailyCount;
                 totalCountEl.textContent = data.totalCount;
                 dailyLimitEl.textContent = `上限 ${data.dailyLimit} 張`;
                 serverDateEl.textContent = data.today;
 
-                // 隱藏驗證區塊，顯示數據區塊
+                // ✅ 顯示管理數據
                 authSection.style.display = 'none';
                 statsDisplay.style.display = 'block';
 
             } catch (error) {
-                authMessage.textContent = `載入失敗：${error.message}，請檢查 Vercel 伺服器和密鑰。`;
+                authMessage.textContent = `密鑰錯誤或伺服器錯誤：${error.message}`;
             }
         }
+
     </script>
 </body>
 </html>
