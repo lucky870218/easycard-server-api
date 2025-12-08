@@ -108,8 +108,8 @@
             authMessage.textContent = '正在載入數據...';
             
             try {
-                // 📢 【修改點】呼叫新的 /api/stats 端點，並帶上密鑰參數
-                const response = await fetch(`${BACKEND_URL}/api/stats?key=${providedKey}`);
+                // 📢 【修改點】呼叫新的 /api/admin_stats 端點，並帶上密鑰參數
+                const response = await fetch(`${BACKEND_URL}/api/admin_stats?key=${providedKey}`);
                 const data = await response.json();
 
                 if (response.status === 401) {

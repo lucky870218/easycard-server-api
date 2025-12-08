@@ -86,6 +86,9 @@
     
     // 仍然需要這個 Key，用於「限制單一手機」在一天內只能按一次兌換按鈕
     const localDailyClaimKey = 'dsf_local_daily_timestamp'; 
+    const localRedeemedTimeKey = 'dsf_local_redeemed_time';
+    const timeString = new Date().toLocaleString();
+
 
     // 取得今天的日期 (YYYY-MM-DD)，用於 Local Storage 檢查
     function getTodayDateString() {
@@ -98,7 +101,7 @@
     async function fetchStatsForCheck() {
         try {
             // 注意：兌換頁面不需要 ADMIN_KEY，這裡只是為了簡單檢查狀態
-            const response = await fetch(`${BACKEND_URL}/api/stats?key=CHECK`); // 使用一個無意義的 key 進行簡單檢查
+            const response = await fetch(`${BACKEND_URL}/api/public_stats`); // 使用一個無意義的 key 進行簡單檢查
             if (!response.ok) return null;
             return await response.json();
         } catch (error) {
