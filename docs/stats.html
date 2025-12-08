@@ -100,7 +100,7 @@
             authMessage.textContent = '正在載入數據...';
 
             try {
-                const response = await fetch(`${BACKEND_URL}/api/stats?key=${providedKey}`);
+                const response = await fetch(`${BACKEND_URL}/api/admin_stats?key=${providedKey}`);
                 const data = await response.json();
 
                 if (!response.ok) {
