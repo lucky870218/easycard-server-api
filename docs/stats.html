@@ -122,6 +122,12 @@
             }
         }
 
+        adminKeyInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                loadStats();  // 等同於你點「確認」按鈕
+            }
+        });
+
     </script>
 </body>
 </html>
