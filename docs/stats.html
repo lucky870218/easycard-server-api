@@ -68,15 +68,17 @@
 
         <div id="statsDisplay" style="display: none;">
             <p style="color: #6c757d;">伺服器時間：<span id="serverDate"></span></p>
-            
-            <div class="stats-item">
-                當日發放數量 (<span id="dailyLimit"></span>)
-                <span id="dailyCount" class="stats-value">--</span>
-            </div>
-            
-            <div class="stats-item">
+    
+            <div class="stats-item" style="border-left: 5px solid #28a745;">
                 活動總發放數量
                 <span id="totalCount" class="stats-value">--</span>
+            </div>
+
+            <hr>
+            
+            <h2>📅 每日發放記錄 (按日期新到舊)</h2>
+            <div id="dailyStatsList">
+                <p style="color: #6c757d;">載入中...</p>
             </div>
         </div>
     </div>
@@ -90,9 +92,9 @@
         const statsDisplay = document.getElementById('statsDisplay');
         const authMessage = document.getElementById('authMessage');
 
-        const dailyCountEl = document.getElementById('dailyCount');
         const totalCountEl = document.getElementById('totalCount');
-        const dailyLimitEl = document.getElementById('dailyLimit');
+        // 🎯 【關鍵修改點 4】新增 Daily Stats List 元素
+        const dailyStatsListEl = document.getElementById('dailyStatsList');
         const serverDateEl = document.getElementById('serverDate');
 
         async function loadStats() {
@@ -108,10 +110,11 @@
                 }
 
                 // ✅ 成功取得數據，更新顯示
-                dailyCountEl.textContent = data.dailyCount;
                 totalCountEl.textContent = data.totalCount;
-                dailyLimitEl.textContent = `上限 ${data.dailyLimit} 張`;
                 serverDateEl.textContent = data.today;
+
+                // 🎯 【關鍵修改點 5】處理並顯示每日記錄列表
+                renderDailyStats(data.dailyStats);
 
                 // ✅ 顯示管理數據
                 authSection.style.display = 'none';
@@ -120,6 +123,38 @@
             } catch (error) {
                 authMessage.textContent = `密鑰錯誤或伺服器錯誤：${error.message}`;
             }
+        }
+
+        // 🎯 【關鍵修改點 6】新增渲染列表的函式
+        function renderDailyStats(dailyStats) {
+            dailyStatsListEl.innerHTML = ''; // 清空列表
+            
+            if (dailyStats.length === 0) {
+                dailyStatsListEl.innerHTML = '<p style="color: #dc3545;">尚無發放記錄。</p>';
+                return;
+            }
+
+            const ul = document.createElement('ul');
+            ul.style.listStyleType = 'none';
+            ul.style.padding = '0';
+            
+            dailyStats.forEach(item => {
+                const li = document.createElement('li');
+                li.style.marginBottom = '8px';
+                li.style.padding = '10px';
+                li.style.backgroundColor = '#e9ecef';
+                li.style.borderRadius = '6px';
+                
+                const dateStr = new Date(item.date).toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+                
+                li.innerHTML = `
+                    <strong>${dateStr}</strong>：
+                    <span style="float: right; font-weight: bold; color: #007bff;">${item.count} 張</span>
+                `;
+                ul.appendChild(li);
+            });
+            
+            dailyStatsListEl.appendChild(ul);
         }
 
         adminKeyInput.addEventListener('keydown', function (e) {

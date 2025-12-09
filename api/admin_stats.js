@@ -22,26 +22,24 @@ module.exports = async (req, res) => {
         client = await getClient();
         const today = getTodayDate();
 
-        // 🏆 修改後的 SQL 查詢
-        const todayRes = await client.query(`
-            SELECT COALESCE(count, 0) AS dailyCount
+        // 🎯 【關鍵修改點 1】查詢所有日期的發放數量，按日期排序
+        const allDaysRes = await client.query(`
+            SELECT date, count
             FROM easycards
-            WHERE date = $1
-        `, [today]);
+            ORDER BY date DESC;
+        `);
 
-        // 處理當日計數 (如果沒有記錄，則為 0)
-        // 注意：由於只查詢了一次，因此可能沒有 rows
-        const dailyCount = todayRes.rows.length > 0 ? todayRes.rows[0].dailycount : 0;
-        // dailyLimit 已被移除，無需定義
+        const dailyStats = allDaysRes.rows; // 這是我們需要的每日數據列表
 
         // 查詢總數不變
         const totalRes = await client.query('SELECT SUM(count) AS totalCount FROM easycards');
         const totalCount = totalRes.rows[0].totalcount || 0;
 
+        // 🎯 【關鍵修改點 2】調整回應數據結構
         res.status(200).json({
-            today,
-            dailyCount,
-            totalCount,
+            today, // 伺服器今日日期
+            dailyStats: dailyStats, // 傳送每日數據列表
+            totalCount: totalCount, // 總數量
         });
 
     } catch (error) {
