@@ -131,15 +131,11 @@
              return;
         }
         
-        backendStatusEl.textContent = `今日已發 ${stats.dailyCount} / ${stats.dailyLimit} 張`;
-
-        if (stats.dailyCount >= stats.dailyLimit) {
-            // 伺服器：今日限量已達
-            statusEl.textContent = '系統顯示：今日份的悠遊卡已全數發放完畢。';
-            statusEl.className = 'status status-used';
-        } else if (isLocalRedeemed) {
+        // backendStatusEl.textContent = `今日已發 ${stats.dailyCount} / ${stats.dailyLimit} 張`;
+        
+        if (isLocalRedeemed) {
             // 本機：今日已兌換過
-            btn.textContent = '本日已兌換完成 (請勿重複點擊)';
+            btn.textContent = '已兌換完成 (請勿重複點擊)';
             const redeemedTime = localStorage.getItem(localRedeemedTimeKey);
 
             statusEl.innerHTML = `
@@ -183,7 +179,8 @@
 
             if (response.ok && result.success) {
                 // 兌換成功
-                statusEl.textContent = `兌換成功！感謝您的參與！ (本日第 ${result.dailyCount} 張)`;
+                // statusEl.textContent = `兌換成功！感謝您的參與！ (本日第 ${result.dailyCount} 張)`;
+                statusEl.textContent = `兌換成功！感謝您的參與！`;
                 statusEl.className = 'status status-ok';
 
                 // 寫入 Local Storage，防止用戶再次點擊
