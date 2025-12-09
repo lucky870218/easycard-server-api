@@ -118,7 +118,7 @@
 
     // 3. 根據狀態更新 UI
     async function updateUI() {
-        backendStatusEl.textContent = '正在檢查狀態...';
+        // backendStatusEl.textContent = '正在檢查狀態...';
         btn.disabled = true; // 預設禁用
 
         const stats = await fetchStatsForCheck();
