@@ -22,19 +22,19 @@ module.exports = async (req, res) => {
         client = await getClient();
         const today = getTodayDate();
 
+        // 🏆 修改後的 SQL 查詢
         const todayRes = await client.query(`
-            SELECT COALESCE(count, 0) AS dailyCount, daily_limit 
-            FROM easycards 
+            SELECT COALESCE(count, 0) AS dailyCount
+            FROM easycards
             WHERE date = $1
-            UNION ALL 
-            SELECT 0, 100 
-            WHERE NOT EXISTS (SELECT 1 FROM easycards WHERE date = $1)
-            LIMIT 1;
         `, [today]);
 
-        const dailyCount = todayRes.rows[0].dailycount;
-        const dailyLimit = todayRes.rows[0].daily_limit;
+        // 處理當日計數 (如果沒有記錄，則為 0)
+        // 注意：由於只查詢了一次，因此可能沒有 rows
+        const dailyCount = todayRes.rows.length > 0 ? todayRes.rows[0].dailycount : 0;
+        // dailyLimit 已被移除，無需定義
 
+        // 查詢總數不變
         const totalRes = await client.query('SELECT SUM(count) AS totalCount FROM easycards');
         const totalCount = totalRes.rows[0].totalcount || 0;
 
@@ -42,7 +42,6 @@ module.exports = async (req, res) => {
             today,
             dailyCount,
             totalCount,
-            dailyLimit
         });
 
     } catch (error) {
